@@ -51,7 +51,7 @@ class ProductController extends Controller
 
                 $pro->save();
 
-                return back()->with('success', 'Updated');
+                return redirect()->route('viewProducts')->with('success', 'Updated');
             } else {
                 return back()->withErrors('error', 'error on update');
             }

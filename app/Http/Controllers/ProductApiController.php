@@ -71,6 +71,37 @@ class ProductApiController extends Controller
      */
     public function store(Request $request)
     {
+        try {
+            $validated =    $request->validate([
+                'name' => ['required', 'string', 'max:255', 'unique:products'],
+                'price' => ['required'],
+                // 'file' => ['required'],
+                'SKU' => 'nullable',
+                'status' => 'nullable',
+            ]);
+
+
+            if ($pro = Product::create($validated)) {
+                // image upload
+
+                $file =  $request->file('file');
+
+                $fileName = 'product_' . $pro->id . '.' . $file->getClientOriginalExtension();
+                $path = $file->move(
+                    public_path('product_images/'),
+                    $fileName
+                );
+                $pro->image = $fileName;
+
+                $pro->save();
+
+                return response()->json(['success' => true, 'product' => $pro], 200);
+            } else {
+                return response()->json(['status' => 'false'], 202);
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th], 202);
+        }
     }
 
     /**
@@ -81,6 +112,13 @@ class ProductApiController extends Controller
      */
     public function show($id)
     {
+
+        try {
+            $product = Product::find($id);
+            return response()->json(['product' => $product], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 202);
+        }
     }
 
     /**

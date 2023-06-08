@@ -19,41 +19,23 @@ class UserApiController extends Controller
 
     function login(Request $request)
     {
-        $validator =  Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|min:6',
-        ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'validation_errors' => $validator->getMessageBag(),
-                'validation_fail' => $validator->fails()
-            ]);
-        } else {
-
-            $user = User::where('email', $request->email)->first();
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                return response()->json([
-                    'message' => 'These credentials do not match our records.',
-                    'status' => 401
-                ]);
-            }
-
-            session([
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-
-            ]);
-
-
-            return response()->json([
-                'status' => 200,
-                'message' => 'logged in successfully',
-                'username' => $user->name,
-                // session()->all(),
-                // Config::get('session.lifetime') * 60,
-            ]);
+        $user = User::where('email', $request->email)->first();
+        // print_r($data);
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response([
+                'message' => ['These credentials do not match our records.']
+            ], 404);
         }
+
+        $token = $user->createToken('my-app-token')->plainTextToken;
+
+        $response = [
+            'user' => $user,
+            'token' => $token
+        ];
+
+        return response($response, 201);
     }
 
     function register(Request $request)
@@ -62,7 +44,7 @@ class UserApiController extends Controller
         $validator =  Validator::make($request->all(), [
             'email' => 'required|email',
             'name' => 'required|min:3',
-            'password_2' => 'required|min:6',
+            'password' => 'required|min:6',
 
         ]);
 
@@ -78,7 +60,7 @@ class UserApiController extends Controller
                 $status =  DB::table('users')->insert([
                     'name' => $request->name,
                     'email' => $request->email,
-                    'password' => Hash::make($request->password_2)
+                    'password' => Hash::make($request->password)
                 ]);
             } catch (\Illuminate\Database\QueryException $ex) {
                 return response()->json([

@@ -16,11 +16,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    //All secure URL's
     Route::apiResource('product', ProductApiController::class);
 
-    // return $request->user();
 });
+
 
 
 
